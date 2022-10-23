@@ -1,0 +1,31 @@
+version: '3.3'
+services:
+  check-version-api:
+    image: repo.sadad.co.ir/repository/baam-docker-registry/check-version-api:BUILD_NUMBER
+    container_name: check-version-api
+    hostname: check-version-api
+    networks:
+      neo-baam:
+        aliases:
+          - check-version-api
+    ports:
+      - 8092:9080
+      - 1716:1716
+    volumes:
+    - /opt/configs/check-version-api:/opt/configs/check-version-api
+    - /var/log/check-version-api:/var/log/check-version-api
+    tty : true
+    extra_hosts:
+      - identity:185.135.30.10
+      - logstash-srv:192.168.52.106
+      - config-srv:192.168.53.73
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - JVM_OPTS=-Dfile.encoding=UTF8
+    working_dir: /
+    build : .
+    restart : always
+    command: [ "/usr/bin/java", "-jar", "/check-version-api-0.0.1-SNAPSHOT.jar" ]
+networks:
+  neo-baam:
+    driver: bridge
