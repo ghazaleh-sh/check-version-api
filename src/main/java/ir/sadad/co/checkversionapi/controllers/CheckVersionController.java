@@ -21,7 +21,7 @@ import static ir.sadad.co.checkversionapi.commons.Constants.SSN;
 
 /**
  * for sending check version request and getting added features
- *
+ * <p>
  * adds, gets and edits data of versions and its details by panel
  *
  * @author g.shahrokhabadi
@@ -41,7 +41,7 @@ public class CheckVersionController {
     @Operation(summary = "سرویس دریافت تاریخچه تغییرات ",
             description = "این سرویس بر اساس ورژن و اطلاعات اپلیکیشن، تغییرات افزوده شده تا آخرین ورژن به همراه پیغام مناسب بروزرسانی را نمایش میدهد.")
     @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = ChangeHistoryResDTO.class)))
-    public ResponseEntity<ChangeHistoryResDTO> changeHistory(@Valid @RequestBody ChangeHistoryReqDTO changeHisReqDTO) {
+    public ResponseEntity<ChangeHistoryResDTO> changeHistory(@Valid ChangeHistoryReqDTO changeHisReqDTO) {
         ChangeHistoryResDTO resDTO = versionService.changeHistory(changeHisReqDTO);
         return new ResponseEntity<>(resDTO, HttpStatus.OK);
     }
@@ -51,7 +51,7 @@ public class CheckVersionController {
     @Operation(summary = "سرویس دریافت تغییرات پس از بروزسانی ",
             description = "این سرویس تغییرات افزوده شده پس از بروزرسانی را نمایش میدهد.")
     @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = AfterUpdateResDTO.class)))
-    public ResponseEntity<AfterUpdateResDTO> afterUpdate(@Valid @RequestBody AfterUpdateReqDTO afterUpdateReqDTO) {
+    public ResponseEntity<AfterUpdateResDTO> afterUpdate(@Valid AfterUpdateReqDTO afterUpdateReqDTO) {
         AfterUpdateResDTO resDTO = versionService.afterUpdate(afterUpdateReqDTO);
         return new ResponseEntity<>(resDTO, HttpStatus.OK);
     }

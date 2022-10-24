@@ -2,11 +2,13 @@ package ir.sadad.co.checkversionapi.dtos;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+/**
+ * In order to bind request parameters to object you need to have standard getters/setters (@Data) in your DTO class.
+ * then you can bind in controller without even any annotation (such as @RequestParam).
+ */
 @Data
 public class ChangeHistoryReqDTO {
 
@@ -18,27 +20,15 @@ public class ChangeHistoryReqDTO {
     @NotNull(message = "version.code.is.required")
     private Integer clientVersionCode;
 
-    @Schema(title = "آبجکت سیستم عامل")
-    @NotNull(message = "os.is.required")
-    @Valid
-    private OsObject os;
+    @Schema(title = "کد سیستم عامل")
+    @NotNull(message = "os.code.is.required")
+    private Integer osCode;
+
+    @Schema(title = "ورژن سیستم عامل")
+    @NotNull(message = "os.version.is.required")
+    private Integer osVersion;
 
     @Schema(title = "درخواست ارسال فیچرها", nullable = true, defaultValue = "false")
     private Boolean returnFeature = false;
 
-    @Data
-    @RequiredArgsConstructor
-    public static class OsObject {
-
-        @NotNull(message = "os.code.is.required")
-        private Integer osCode;
-
-        @NotNull(message = "os.version.is.required")
-        private Integer osVersion;
-
-        public OsObject(Integer osCode, Integer osVersion) {
-            this.osCode = osCode;
-            this.osVersion = osVersion;
-        }
-    }
 }

@@ -5,6 +5,10 @@ import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 
+/**
+ * In order to bind request parameters to object you need to have standard getters/setters (@Data) in your DTO class.
+ * then you can bind in controller without even any annotation (such as @RequestParam).
+ */
 @Data
 public class AfterUpdateReqDTO {
     @Schema(title = " شناسه اپلیکیشن")

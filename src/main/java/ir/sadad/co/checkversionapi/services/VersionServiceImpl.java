@@ -52,7 +52,7 @@ public class VersionServiceImpl implements VersionService {
 
         Version savedVersion = checkVersionCodeWithAppId(changeHistoryReqDTO.getClientVersionCode(), changeHistoryReqDTO.getAppId());
 
-        Status savedStatus = checkVersionCodeStatus(savedVersion, changeHistoryReqDTO.getOs());
+        Status savedStatus = checkVersionCodeStatus(savedVersion, changeHistoryReqDTO.getOsCode(), changeHistoryReqDTO.getOsVersion());
 
         log.info("version and status fetched correctly...");
         Set<Feature> features = new HashSet<>();
@@ -90,7 +90,7 @@ public class VersionServiceImpl implements VersionService {
         Version savedOldVersion = checkVersionCodeWithAppId(afterUpdateReqDTO.getOldVersionCode(), afterUpdateReqDTO.getAppId());
         Version savedCurrentVersion = checkVersionCodeWithAppId(afterUpdateReqDTO.getCurrentVersionCode(), afterUpdateReqDTO.getAppId());
 
-        Status savedCurrentStatus = checkVersionCodeStatus(savedCurrentVersion, null);
+        Status savedCurrentStatus = checkVersionCodeStatus(savedCurrentVersion, null, null);
 
         log.info("both old and current versions and status fetched correctly...");
         Set<Feature> features = new HashSet<>();
@@ -182,7 +182,7 @@ public class VersionServiceImpl implements VersionService {
 
         if (versionUpdateReqDto.getFeatures() != null) {
             versionUpdateReqDto.getFeatures().forEach(f -> {
-                if(f.getId() != null) {
+                if (f.getId() != null) {
                     Feature existedFeature = checkEntityById(featureRepository, f.getId(), "feature");
                     versionFeatureRepository.findByVersionAndFeature(existedVersion, existedFeature).orElseThrow(() -> new NotFoundException("version.feature"));
                     mapper.updateFeatureFromDto(f, existedFeature);
@@ -211,13 +211,12 @@ public class VersionServiceImpl implements VersionService {
 
         if (versionUpdateReqDto.getBusinessRules() != null) {
             versionUpdateReqDto.getBusinessRules().forEach(bs -> {
-                if(bs.getId() != null) {
+                if (bs.getId() != null) {
                     Optional<BusinessRule> bsReq = businessRuleRepository.findByIdAndVersion(bs.getId(), existedVersion);
                     BusinessRule existedBS = bsReq.orElseThrow(() -> new NotFoundException("businessRule"));
                     mapper.updateBSFromDto(bs, existedBS);
                     businessRuleRepository.saveAndFlush(existedBS);
-                }
-                else{
+                } else {
                     BusinessRule newBS = new BusinessRule();
                     newBS.setBsTitle(bs.getBsTitle());
                     newBS.setOsCode(bs.getOsCode());
@@ -342,16 +341,16 @@ public class VersionServiceImpl implements VersionService {
 
     }
 
-    private Integer checkVersionBusinessRule(Version savedVersion, ChangeHistoryReqDTO.OsObject savedOs) {
+    private Integer checkVersionBusinessRule(Version savedVersion, Integer osCode, Integer ocVersion) {
 
-        Optional<BusinessRule> businessRule = businessRuleRepository.findByVersionAndOsCodeAndOsVersion(savedVersion, savedOs.getOsCode(), savedOs.getOsVersion());
+        Optional<BusinessRule> businessRule = businessRuleRepository.findByVersionAndOsCodeAndOsVersion(savedVersion, osCode, ocVersion);
         if (businessRule.isPresent())
             return 4;//unable to update
 
         return 2; //optional update
     }
 
-    private Status checkVersionCodeStatus(Version savedVersion, ChangeHistoryReqDTO.OsObject savedOs) {
+    private Status checkVersionCodeStatus(Version savedVersion, Integer osCode, Integer osVersion) {
         Integer statusCode = 1; //force update
         if (savedVersion.isEnabled())
             statusCode = 3; //updated
@@ -364,7 +363,8 @@ public class VersionServiceImpl implements VersionService {
             if (TimeUnit.DAYS.convert(diffInMilis, TimeUnit.MILLISECONDS) > 30)
                 statusCode = 1;
 
-            else if (savedOs != null) statusCode = checkVersionBusinessRule(savedVersion, savedOs);
+            else if (osCode != null && osVersion != null)
+                statusCode = checkVersionBusinessRule(savedVersion, osCode, osVersion);
 
             else return statusRepository.findByStatusCode(savedVersion.getStatus().getStatusCode());
 
