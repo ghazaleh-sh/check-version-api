@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Date;
 import java.util.List;
@@ -13,7 +14,8 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AddVersionReqDto {
+public class AddVersionReqDto implements Serializable {
+    private static final long serialVersionUID = -9126296016777934542L;
     @NotNull(message = "version.name.is.required")
     private String versionName;
 

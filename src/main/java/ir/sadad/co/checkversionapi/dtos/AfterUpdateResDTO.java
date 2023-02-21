@@ -8,13 +8,15 @@ import ir.sadad.co.checkversionapi.entities.Status;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.List;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class AfterUpdateResDTO {
+public class AfterUpdateResDTO implements Serializable {
 
+    private static final long serialVersionUID = 5532698440355553029L;
     @Schema(title = "کد ورژن نهایی", description = "شامل ورژن آخر براساس اپلیکیشن کاریر")
     private Integer lastVersionCode;
 
@@ -22,7 +24,6 @@ public class AfterUpdateResDTO {
     private Boolean isLastVersion = false;
 
     @Schema(title = "وضعیت ورژن پس از بروزرسانی بر اساس اپلیکشن")
-    @NotNull
     private Status appStatus;
 
     @Schema(title = "لیست فیچرهای افزوده شده از ورژن قبلی تا ورژن جاری", nullable = true)

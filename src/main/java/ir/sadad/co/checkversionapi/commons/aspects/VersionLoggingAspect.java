@@ -24,4 +24,10 @@ public class VersionLoggingAspect {
         log.info("********** completed executing: " + joinPoint.getSignature().getName() +
                 " with return value: " + result);
     }
+
+    @AfterThrowing(pointcut = "execution(* ir.sadad.co.checkversionapi.services.VersionServiceImpl.*(..))", throwing = "e")
+    public void logAfterThrowing(JoinPoint joinPoint, Throwable e) {
+        log.error("Exception in {}.{}() with cause = {}", joinPoint.getSignature().getDeclaringTypeName(),
+                joinPoint.getSignature().getName(), e.getMessage() != null ? e.getMessage() : "NULL");
+    }
 }

@@ -13,9 +13,12 @@ public interface UpdateMapper {
 
     void updateAppInfoFromDto(AppInfoReqDto appInfoReqDto, @MappingTarget ApplicationInfo appInfo);
 
+    @Mapping(target = "validityDate", source = "validityDate", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
     void updateVersionFromDto(UpdateVersionReqDto versionReqDto, @MappingTarget Version existedVersion);
 
-    @Mapping(target = "id", source = "id", ignore = true)
+    @Mappings({
+            @Mapping(target = "id", source = "id", ignore = true),
+            @Mapping(target = "subFeatures", source = "subFeatures", ignore = true)})
     void updateFeatureFromDto(UpdateVersionReqDto.FeatureUpdateObj featureObjDto, @MappingTarget Feature feature);
 
     @Mapping(target = "id", source = "id", ignore = true)

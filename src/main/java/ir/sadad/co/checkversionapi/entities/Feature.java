@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import ir.sadad.co.checkversionapi.enums.FeatureType;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Cache;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -19,6 +21,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @Entity
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Table(name = "FEATURE", schema = "VERSION_API")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class Feature implements Serializable {
@@ -29,7 +32,7 @@ public class Feature implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "FEATURE_TITLE", length = 50, nullable = false)
+    @Column(name = "FEATURE_TITLE", length = 150, nullable = false)
     @NotNull
     private String featureTitle;
 
@@ -44,7 +47,7 @@ public class Feature implements Serializable {
     @Column(name = "FEATURE_CODE")
     private BigInteger featureCode;
 
-    @Column(name = "FEATURE_DESCRIPTION", length = 50)
+    @Column(name = "FEATURE_DESCRIPTION")
     private String featureDescription;
 
     @Transient

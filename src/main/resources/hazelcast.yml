@@ -1,0 +1,10 @@
+########################## It is necessary for syncing multiple nodes of this application- on this IP #################
+################### We can do it into config class instead #################
+#######list ip/hostname of servers which want to find through it but If the nodes see each others, then all data pushed in hazelcast are distributed in the cluster.#################
+hazelcast:
+  network:
+    join:
+      multicast:
+        enabled: false
+#      kubernetes:
+#        enabled: true

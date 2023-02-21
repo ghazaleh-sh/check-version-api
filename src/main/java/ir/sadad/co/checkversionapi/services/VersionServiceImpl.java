@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
@@ -59,7 +58,7 @@ public class VersionServiceImpl implements VersionService {
         List<Version> versionsGtCurrentCode = versionRepository.findByApplicationInfoIdAndVersionCodeGreaterThanOrderByVersionCodeDesc(changeHistoryReqDTO.getAppId(), savedVersion.getVersionCode());
         if (changeHistoryReqDTO.getReturnFeature() && !versionsGtCurrentCode.isEmpty()) {
             versionsGtCurrentCode.forEach(v -> versionFeatureRepository.findByVersion(v).forEach(a ->
-                    features.add(featureRepository.findByIdAndFeatureEnableTrue(a.getFeature().getId()))
+                    features.add(featureRepository.findByIdAndFeatureEnableTrueAndFeatureTypeIsNot(a.getFeature().getId(), FeatureType.SUB_FEATURE))
             ));
         }
 
@@ -68,7 +67,7 @@ public class VersionServiceImpl implements VersionService {
             lastVersion = savedVersion;
             if (changeHistoryReqDTO.getReturnFeature())
                 versionFeatureRepository.findByVersion(lastVersion).forEach(a ->
-                        features.add(featureRepository.findByIdAndFeatureEnableTrue(a.getFeature().getId())));
+                        features.add(featureRepository.findByIdAndFeatureEnableTrueAndFeatureTypeIsNot(a.getFeature().getId(), FeatureType.SUB_FEATURE)));
         } else {
             lastVersion = versionsGtCurrentCode.stream().findFirst().get();
         }
@@ -80,6 +79,9 @@ public class VersionServiceImpl implements VersionService {
         changeHistoryResDTO.setFeatures(featureListWithSub);
         changeHistoryResDTO.setLastVersionName(lastVersion.getVersionName());
         changeHistoryResDTO.setAppStatus(savedStatus);
+        changeHistoryResDTO.setCurrentDate(System.currentTimeMillis()); // equivalent Instant.now().toEpochMilli()  -  modern format
+        if (savedVersion.getValidityDate() != null)
+            changeHistoryResDTO.setValidityDate(savedVersion.getValidityDate().getTime());
 
         return changeHistoryResDTO;
     }
@@ -90,15 +92,20 @@ public class VersionServiceImpl implements VersionService {
         Version savedOldVersion = checkVersionCodeWithAppId(afterUpdateReqDTO.getOldVersionCode(), afterUpdateReqDTO.getAppId());
         Version savedCurrentVersion = checkVersionCodeWithAppId(afterUpdateReqDTO.getCurrentVersionCode(), afterUpdateReqDTO.getAppId());
 
-        Status savedCurrentStatus = checkVersionCodeStatus(savedCurrentVersion, null, null);
+//        Status savedCurrentStatus = checkVersionCodeStatus(savedCurrentVersion, null, null);
 
-        log.info("both old and current versions and status fetched correctly...");
+        log.info("both old and current versions have been fetched correctly...");
         Set<Feature> features = new HashSet<>();
         List<Version> versionsBetweenCodes = versionRepository.findByApplicationInfoIdAndVersionCodeBetween(afterUpdateReqDTO.getAppId(), savedOldVersion.getVersionCode(), savedCurrentVersion.getVersionCode());
         if (!versionsBetweenCodes.isEmpty()) {
-            versionsBetweenCodes.stream().filter(version -> version != savedOldVersion).forEach(v -> versionFeatureRepository.findByVersion(v).forEach(a ->
-                    features.add(featureRepository.findByIdAndFeatureEnableTrue(a.getFeature().getId()))
-            ));
+            if (!savedCurrentVersion.getVersionCode().equals(savedOldVersion.getVersionCode()))
+                versionsBetweenCodes.stream().filter(version -> version != savedOldVersion).forEach(v -> versionFeatureRepository.findByVersion(v).forEach(a ->
+                        features.add(featureRepository.findByIdAndFeatureEnableTrueAndFeatureTypeIsNot(a.getFeature().getId(), FeatureType.SUB_FEATURE))
+                ));
+            else
+                versionFeatureRepository.findByVersion(savedCurrentVersion).forEach(a ->
+                        features.add(featureRepository.findByIdAndFeatureEnableTrueAndFeatureTypeIsNot(a.getFeature().getId(), FeatureType.SUB_FEATURE))
+                );
         }
         log.info("features between 2 versions listed...");
         List<Feature> featureListWithSub = setEnableSubFeatures(features.stream().filter(Objects::nonNull).collect(Collectors.toList()));
@@ -106,7 +113,7 @@ public class VersionServiceImpl implements VersionService {
         AfterUpdateResDTO afterUpdateResDTO = new AfterUpdateResDTO();
         afterUpdateResDTO.setLastVersionCode(versionRepository.findTopByApplicationInfoIdOrderByVersionCodeDesc(afterUpdateReqDTO.getAppId()).getVersionCode());
         afterUpdateResDTO.setFeatures(featureListWithSub);
-        afterUpdateResDTO.setAppStatus(savedCurrentStatus);
+//        afterUpdateResDTO.setAppStatus(savedCurrentStatus);
         if (afterUpdateResDTO.getLastVersionCode().equals(afterUpdateReqDTO.getCurrentVersionCode()))
             afterUpdateResDTO.setIsLastVersion(true);
         return afterUpdateResDTO;
@@ -177,6 +184,7 @@ public class VersionServiceImpl implements VersionService {
             existedVersion.setApplicationInfo(existedApp);
         }
 
+        //versionCode & versionName should not be updated
         mapper.updateVersionFromDto(versionUpdateReqDto, existedVersion);
         versionRepository.saveAndFlush(existedVersion);
 
@@ -191,10 +199,7 @@ public class VersionServiceImpl implements VersionService {
                     if (f.getSubFeatures() != null) {
                         f.getSubFeatures().forEach(sf -> {
                             Optional<SubFeature> sub = subFeatureRepository.findByIdAndFeature(sf.getId(), existedFeature);
-                            if (sub.isPresent()) {
-                                mapper.updateSubFeatureFromDto(sf, sub.get());
-                                subFeatureRepository.saveAndFlush(sub.get());
-                            } else {
+                            if (sub.isEmpty()) {
                                 SubFeature subFeature = new SubFeature();
                                 subFeature.setId(sf.getId());
                                 subFeature.setFeature(existedFeature);
@@ -341,30 +346,28 @@ public class VersionServiceImpl implements VersionService {
 
     }
 
-    private Integer checkVersionBusinessRule(Version savedVersion, Integer osCode, Integer ocVersion) {
+    private boolean checkVersionBusinessRule(Version savedVersion, Integer osCode, Integer ocVersion) {
 
         Optional<BusinessRule> businessRule = businessRuleRepository.findByVersionAndOsCodeAndOsVersion(savedVersion, osCode, ocVersion);
-        if (businessRule.isPresent())
-            return 4;//unable to update
+        return businessRule.isPresent();
 
-        return 2; //optional update
     }
 
     private Status checkVersionCodeStatus(Version savedVersion, Integer osCode, Integer osVersion) {
-        Integer statusCode = 1; //force update
+        int statusCode;
         if (savedVersion.isEnabled())
             statusCode = 3; //updated
-
-        else if (savedVersion.getStatus().getStatusCode().equals(VersionStatus.ForceUpdate.getValue()))
-            statusCode = 1;
-
         else {
-            long diffInMilis = Math.abs(new Date().getTime() - savedVersion.getValidityDate().getTime());
-            if (TimeUnit.DAYS.convert(diffInMilis, TimeUnit.MILLISECONDS) > 30)
-                statusCode = 1;
+            /*
+            for checking a full day before expiration date use:
+            TimeUnit.DAYS.convert((savedVersion.getValidityDate().getTime() - System.currentTimeMillis()), TimeUnit.MILLISECONDS) <= 0
+             */
+            if (osCode != null && osVersion != null && checkVersionBusinessRule(savedVersion, osCode, osVersion))
+                statusCode = 4; //unable to update
 
-            else if (osCode != null && osVersion != null)
-                statusCode = checkVersionBusinessRule(savedVersion, osCode, osVersion);
+            else if (savedVersion.getValidityDate() != null &&
+                    (savedVersion.getValidityDate().getTime() - System.currentTimeMillis()) <= 0)
+                statusCode = 1;
 
             else return statusRepository.findByStatusCode(savedVersion.getStatus().getStatusCode());
 

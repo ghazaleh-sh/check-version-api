@@ -2,6 +2,8 @@ package ir.sadad.co.checkversionapi.entities;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Cache;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -15,20 +17,24 @@ import java.util.Date;
 @Getter
 @Setter
 @Entity
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Table(name = "Version", schema = "VERSION_API")
 public class Version implements Serializable {
 
+    private static final long serialVersionUID = -7408239447840978240L;
     @Id
     @Column(name = "ID")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     @JoinColumn(name = "APP_ID", referencedColumnName = "ID", nullable = false)
     @NotNull
     private ApplicationInfo applicationInfo;
 
     @ManyToOne
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     @JoinColumn(name = "STATUS_ID", referencedColumnName = "ID", nullable = false)
     @NotNull
     private Status status;

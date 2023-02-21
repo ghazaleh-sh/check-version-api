@@ -3,6 +3,7 @@ package ir.sadad.co.checkversionapi.dtos;
 import lombok.*;
 
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Date;
 import java.util.List;
@@ -12,7 +13,8 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UpdateVersionReqDto {
+public class UpdateVersionReqDto implements Serializable {
+    private static final long serialVersionUID = 2079704929565684640L;
     private String versionName;
     private Integer versionCode;
     private Long applicationId;
