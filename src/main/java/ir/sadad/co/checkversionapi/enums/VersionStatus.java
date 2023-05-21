@@ -5,10 +5,11 @@ import lombok.Getter;
 @Getter
 public enum VersionStatus {
     ForceUpdate(1),
-    Updated(2),
-    TEST(3);
+    Updated(3),
+    UnableToUpdate(4),
+    TEST(5);
 
-    private int value;
+    private final int value;
 
     VersionStatus(int value) {
         this.value = value;

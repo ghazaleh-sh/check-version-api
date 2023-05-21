@@ -44,6 +44,7 @@ public class VersionServiceImpl implements VersionService {
     private final UpdateMapper mapper;
     private final VersionMapper versionMapper;
     private final ModelMapper modelMapper;
+    private final FlavorRepository flavorRepository;
 
     @SneakyThrows
     @Override
@@ -56,23 +57,30 @@ public class VersionServiceImpl implements VersionService {
         log.info("version and status fetched correctly...");
         Set<Feature> features = new HashSet<>();
         List<Version> versionsGtCurrentCode = versionRepository.findByApplicationInfoIdAndVersionCodeGreaterThanOrderByVersionCodeDesc(changeHistoryReqDTO.getAppId(), savedVersion.getVersionCode());
-        if (changeHistoryReqDTO.getReturnFeature() && !versionsGtCurrentCode.isEmpty()) {
-            versionsGtCurrentCode.forEach(v -> versionFeatureRepository.findByVersion(v).forEach(a ->
-                    features.add(featureRepository.findByIdAndFeatureEnableTrueAndFeatureTypeIsNot(a.getFeature().getId(), FeatureType.SUB_FEATURE))
-            ));
+
+        Version lastVersion = versionsGtCurrentCode.isEmpty() ? savedVersion : versionsGtCurrentCode.stream().findFirst().get();
+
+        if (changeHistoryReqDTO.getReturnFeature()) {
+            if (savedStatus.getStatusCode().equals(VersionStatus.UnableToUpdate.getValue())) {
+                versionFeatureRepository.findByVersion(savedVersion).forEach(versionFeature ->
+                        features.add(featureRepository.findByIdAndFeatureEnableTrueAndFeatureTypeIsNot(versionFeature.getFeature().getId(), FeatureType.SUB_FEATURE)));
+
+            } else if (!versionsGtCurrentCode.isEmpty()) {
+                versionsGtCurrentCode.forEach(v -> versionFeatureRepository.findByVersion(v).forEach(a ->
+                        features.add(featureRepository.findByIdAndFeatureEnableTrueAndFeatureTypeIsNot(a.getFeature().getId(), FeatureType.SUB_FEATURE))));
+
+            } else {
+                versionFeatureRepository.findByVersion(lastVersion).forEach(versionFeature ->
+                        features.add(featureRepository.findByIdAndFeatureEnableTrueAndFeatureTypeIsNot(versionFeature.getFeature().getId(), FeatureType.SUB_FEATURE)));
+            }
+
         }
 
-        Version lastVersion;
-        if (versionsGtCurrentCode.isEmpty()) {
-            lastVersion = savedVersion;
-            if (changeHistoryReqDTO.getReturnFeature())
-                versionFeatureRepository.findByVersion(lastVersion).forEach(a ->
-                        features.add(featureRepository.findByIdAndFeatureEnableTrueAndFeatureTypeIsNot(a.getFeature().getId(), FeatureType.SUB_FEATURE)));
-        } else {
-            lastVersion = versionsGtCurrentCode.stream().findFirst().get();
-        }
         log.info("last version fetched correctly....");
-        List<Feature> featureListWithSub = setEnableSubFeatures(features.stream().filter(Objects::nonNull).collect(Collectors.toList()));
+        List<Feature> featureListWithSub = setEnableSubFeatures(filterGeneralBugFix(features.stream()
+                .filter(Objects::nonNull).collect(Collectors.toList())));
+
+        Optional<String> downloadLink = getDownloadLink(changeHistoryReqDTO.getAppId(), changeHistoryReqDTO.getFlavorName());
 
         ChangeHistoryResDTO changeHistoryResDTO = new ChangeHistoryResDTO();
         changeHistoryResDTO.setLastVersionCode(lastVersion.getVersionCode());
@@ -80,10 +88,38 @@ public class VersionServiceImpl implements VersionService {
         changeHistoryResDTO.setLastVersionName(lastVersion.getVersionName());
         changeHistoryResDTO.setAppStatus(savedStatus);
         changeHistoryResDTO.setCurrentDate(System.currentTimeMillis()); // equivalent Instant.now().toEpochMilli()  -  modern format
+        changeHistoryResDTO.setDownloadLink(downloadLink.orElse(null));
         if (savedVersion.getValidityDate() != null)
             changeHistoryResDTO.setValidityDate(savedVersion.getValidityDate().getTime());
 
         return changeHistoryResDTO;
+    }
+
+    private List<Feature> filterGeneralBugFix(List<Feature> features) {
+
+        Optional<Feature> firstGeneralBugFix = features.stream()
+                .filter(feature -> feature.getFeatureType().equals(FeatureType.GENERAL_BUGFIX))
+                // to compare features based on their IDs and returns an Optional containing the feature with the highest ID.
+                .max(Comparator.comparingLong(Feature::getId));
+
+        if (firstGeneralBugFix.isPresent()) {
+            List<Feature> filteredFeatures = features.stream()
+                    .filter(feature -> !feature.getFeatureType().equals(FeatureType.GENERAL_BUGFIX))
+                    .collect(Collectors.toList());
+
+            filteredFeatures.add(firstGeneralBugFix.get());
+            features.clear();
+            features.addAll(filteredFeatures);
+        }
+        return features;
+
+    }
+
+    private Optional<String> getDownloadLink(Long appId, String flavorName) {
+
+        return flavorRepository.findByApplicationInfoIdAndFlavorName(appId, flavorName)
+                .map(Flavor::getDownloadLink);
+
     }
 
     @SneakyThrows
@@ -108,7 +144,7 @@ public class VersionServiceImpl implements VersionService {
                 );
         }
         log.info("features between 2 versions listed...");
-        List<Feature> featureListWithSub = setEnableSubFeatures(features.stream().filter(Objects::nonNull).collect(Collectors.toList()));
+        List<Feature> featureListWithSub = setEnableSubFeatures(filterGeneralBugFix(features.stream().filter(Objects::nonNull).collect(Collectors.toList())));
 
         AfterUpdateResDTO afterUpdateResDTO = new AfterUpdateResDTO();
         afterUpdateResDTO.setLastVersionCode(versionRepository.findTopByApplicationInfoIdOrderByVersionCodeDesc(afterUpdateReqDTO.getAppId()).getVersionCode());
@@ -290,8 +326,22 @@ public class VersionServiceImpl implements VersionService {
     @Override
     public GetEnableFeaturesDto getEnableFeatures() {
         GetEnableFeaturesDto enableFeatures = new GetEnableFeaturesDto();
-        enableFeatures.setGetFeatureDtoList(featureRepository.findAllByFeatureEnableTrue().stream()
-                .map(app -> modelMapper.map(app, GetEnableFeaturesDto.GetEnableFeatureDto.class)).collect(Collectors.toList()));
+        List<GetEnableFeaturesDto.GetEnableFeatureDto> featuresList = new ArrayList<>();
+
+        featureRepository.findAllByFeatureEnableTrue()
+                .forEach(feature -> {
+                    GetEnableFeaturesDto.GetEnableFeatureDto eachFeature = new GetEnableFeaturesDto.GetEnableFeatureDto();
+                    modelMapper.map(feature, eachFeature);
+                    versionFeatureRepository.findByFeature(feature)
+                            .forEach(versionFeature -> {
+                                versionRepository.findById(versionFeature.getVersion().getId())
+                                        .ifPresent(version -> eachFeature.setAppId(version.getApplicationInfo().getId()));
+                            });
+                    featuresList.add(eachFeature);
+
+                });
+
+        enableFeatures.setGetFeatureDtoList(featuresList);
 
         return enableFeatures;
     }
@@ -339,6 +389,46 @@ public class VersionServiceImpl implements VersionService {
         existedFeature.setFeatureEnable(enableDto.isFeatureEnable());
         featureRepository.saveAndFlush(existedFeature);
     }
+
+    @Override
+    public GetFlavorsDto getAllFlavors() {
+        GetFlavorsDto allFlavor = new GetFlavorsDto();
+        allFlavor.setFlavorsList(flavorRepository.findAll().stream()
+                .map(flavor -> modelMapper.map(flavor, GetFlavorsDto.GetFlavorDto.class)).collect(Collectors.toList()));
+
+        return allFlavor;
+    }
+
+    @Override
+    public void addFlavor(FlavorReqDto flavorReqDto) {
+        if (flavorReqDto.getFlavorName() == null || "".equals(flavorReqDto.getFlavorName()) ||
+                flavorReqDto.getDownloadLink() == null || "".equals(flavorReqDto.getDownloadLink()) || flavorReqDto.getApplicationId() == null)
+            throw new NotFoundException("flavor.data");
+
+        ApplicationInfo existedApp = checkEntityById(applicationInfoRepository, flavorReqDto.getApplicationId(), "application");
+
+        Flavor newFlavor = new Flavor();
+        newFlavor.setApplicationInfo(existedApp);
+        newFlavor.setFlavorName(flavorReqDto.getFlavorName());
+        newFlavor.setDownloadLink(flavorReqDto.getDownloadLink());
+        flavorRepository.saveAndFlush(newFlavor);
+    }
+
+    @Override
+    public void updateFlavor(Long id, FlavorReqDto flavorReqDto) {
+        Flavor existedFlavor = checkEntityById(flavorRepository, id, "flavor");
+
+        if (flavorReqDto.getApplicationId() != null
+                && (!flavorReqDto.getApplicationId().equals(existedFlavor.getApplicationInfo().getId()))) {
+
+            existedFlavor.setApplicationInfo(checkEntityById(applicationInfoRepository,
+                    flavorReqDto.getApplicationId(), "application"));
+        }
+        mapper.updateFlavorFromDto(flavorReqDto, existedFlavor);
+
+        flavorRepository.saveAndFlush(existedFlavor);
+    }
+
 
     private Version checkVersionCodeWithAppId(Integer versionCode, Long appId) {
         Optional<Version> version = versionRepository.findByVersionCodeAndApplicationInfoId(versionCode, appId);

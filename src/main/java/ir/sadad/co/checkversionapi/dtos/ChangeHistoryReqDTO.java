@@ -3,6 +3,7 @@ package ir.sadad.co.checkversionapi.dtos;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
@@ -32,5 +33,8 @@ public class ChangeHistoryReqDTO implements Serializable {
 
     @Schema(title = "درخواست ارسال فیچرها", nullable = true, defaultValue = "false")
     private Boolean returnFeature = false;
+
+    @Schema(title = "عنوان فلیور")
+    private String flavorName;
 
 }

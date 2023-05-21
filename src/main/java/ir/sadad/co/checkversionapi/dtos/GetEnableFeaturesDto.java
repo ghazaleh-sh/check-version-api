@@ -31,5 +31,6 @@ public class GetEnableFeaturesDto {
         private BigInteger featureCode;
         private String featureDescription;
         private List<Feature> subFeatures;
+        private Long appId;
     }
 }

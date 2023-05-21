@@ -3,7 +3,8 @@ package ir.sadad.co.checkversionapi.enums;
 public enum OsCode {
 
     ANDROID(1),
-    IOS(2);
+    IOS(2),
+    WEB(3);
 
     private Integer value;
 

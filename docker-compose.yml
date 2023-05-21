@@ -9,7 +9,7 @@ services:
         aliases:
           - check-version-api
     ports:
-      - 8092:9080
+      - 8092:8092
       - 1716:1716
     volumes:
     - /opt/configs/check-version-api:/opt/configs/check-version-api

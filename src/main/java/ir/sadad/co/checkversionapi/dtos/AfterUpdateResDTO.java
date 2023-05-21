@@ -13,7 +13,7 @@ import java.util.List;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
+//@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class AfterUpdateResDTO implements Serializable {
 
     private static final long serialVersionUID = 5532698440355553029L;

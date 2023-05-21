@@ -180,4 +180,34 @@ public class CheckVersionController {
         GetVersionsDto versions = versionService.getAllVersions();
         return new ResponseEntity<>(versions, HttpStatus.OK);
     }
+
+    @GetMapping("/flavors")
+    @ApiGeneralResponses
+    @Operation(summary = "دریافت لیست فلیورها ",
+            description = "لیستی از کل اطلاعات فلیورها نمایش داده میشود")
+    public ResponseEntity<GetFlavorsDto> getFlavors(@RequestHeader(SSN) @CheckSsnCrudUser String ssn) {
+        GetFlavorsDto flavors = versionService.getAllFlavors();
+        return new ResponseEntity<>(flavors, HttpStatus.OK);
+    }
+
+    @PostMapping("/add-flavor")
+    @ApiGeneralResponses
+    @Operation(summary = "افزودن فلیور جدید ",
+            description = "این سرویس فلیور را اضافه مینماید.")
+    public ResponseEntity<HttpStatus> addFlavor(@RequestHeader(SSN) @CheckSsnCrudUser String ssn,
+                                                 @RequestBody FlavorReqDto flavorReqDto) {
+        versionService.addFlavor(flavorReqDto);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PutMapping("/update-flavor/{id}")
+    @ApiGeneralResponses
+    @Operation(summary = "بروزرسانی اطلاعات فلیور ",
+            description = "این سرویس اطلاعات فلیور درخواستی بر اساس شناسه را بروزرسانی مینماید.")
+    public ResponseEntity<HttpStatus> updateFlavor(@RequestHeader(SSN) @CheckSsnCrudUser String ssn,
+                                                   @PathVariable("id") Long id,
+                                                   @RequestBody FlavorReqDto flavorReqDto) {
+        versionService.updateFlavor(id, flavorReqDto);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 }

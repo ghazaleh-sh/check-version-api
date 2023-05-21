@@ -65,4 +65,10 @@ public interface VersionService {
     VersionInfoDto getVersion(Long versionId);
 
     GetVersionsDto getAllVersions();
+
+    GetFlavorsDto getAllFlavors();
+
+    void addFlavor(FlavorReqDto flavorReqDto);
+
+    void updateFlavor(Long id, FlavorReqDto flavorReqDto);
 }

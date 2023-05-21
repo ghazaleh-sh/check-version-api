@@ -14,4 +14,6 @@ public interface VersionFeatureRepository extends JpaRepository<VersionFeature, 
 
     Optional<VersionFeature> findByVersionAndFeature(Version version, Feature feature);
 
+    List<VersionFeature> findByFeature(Feature feature);
+
 }

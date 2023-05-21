@@ -13,7 +13,7 @@ import java.util.List;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
+//@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class ChangeHistoryResDTO implements Serializable {
 
     private static final long serialVersionUID = -3524187060646412357L;
@@ -46,5 +46,8 @@ public class ChangeHistoryResDTO implements Serializable {
 
     @Schema(title = "لیست فیچرهای اضافه شده از ورژن جاری کاربر تا ورژن نهایی", nullable = true)
     private List<Feature> features;
+
+    @Schema(title = "لینک دانلود فلیور ارسالی")
+    private String downloadLink;
 
 }

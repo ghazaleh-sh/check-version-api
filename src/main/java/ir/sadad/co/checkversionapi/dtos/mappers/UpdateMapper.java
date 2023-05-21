@@ -1,6 +1,7 @@
 package ir.sadad.co.checkversionapi.dtos.mappers;
 
 import ir.sadad.co.checkversionapi.dtos.AppInfoReqDto;
+import ir.sadad.co.checkversionapi.dtos.FlavorReqDto;
 import ir.sadad.co.checkversionapi.dtos.StatusReqDto;
 import ir.sadad.co.checkversionapi.dtos.UpdateVersionReqDto;
 import ir.sadad.co.checkversionapi.entities.*;
@@ -25,4 +26,6 @@ public interface UpdateMapper {
     void updateBSFromDto(UpdateVersionReqDto.BSUpdateObj bs, @MappingTarget BusinessRule bsEntity);
 
     void updateSubFeatureFromDto(UpdateVersionReqDto.FeatureUpdateObj.SubFeatureObj sf, @MappingTarget SubFeature existedSub);
+
+    void updateFlavorFromDto(FlavorReqDto flavorReqDto, @MappingTarget Flavor existedFlavor);
 }

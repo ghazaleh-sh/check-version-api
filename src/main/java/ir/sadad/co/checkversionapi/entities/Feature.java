@@ -23,7 +23,7 @@ import java.util.Objects;
 @Entity
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Table(name = "FEATURE", schema = "VERSION_API")
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
+//@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class Feature implements Serializable {
 
     private static final long serialVersionUID = 5391539722433933968L;
