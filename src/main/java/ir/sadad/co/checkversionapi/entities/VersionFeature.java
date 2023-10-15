@@ -2,8 +2,6 @@ package ir.sadad.co.checkversionapi.entities;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Cache;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -16,7 +14,7 @@ import java.io.Serializable;
 @Getter
 @Setter
 @Entity
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Table(name = "VERSION_FEATURE", schema = "VERSION_API")
 public class VersionFeature implements Serializable {
 
@@ -27,13 +25,13 @@ public class VersionFeature implements Serializable {
     private Long id;
 
     @ManyToOne
-    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+//    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     @JoinColumn(name = "VERSION_ID", referencedColumnName = "ID", nullable = false)
     @NotNull
     private Version version;
 
     @ManyToOne
-    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+//    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     @JoinColumn(name = "FEATURE_ID", referencedColumnName = "ID", nullable = false)
     @NotNull
     private Feature feature;

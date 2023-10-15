@@ -1,6 +1,5 @@
 package ir.sadad.co.checkversionapi.dtos;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.validation.constraints.NotNull;
@@ -34,6 +33,8 @@ public class AddVersionReqDto implements Serializable {
     private List<FeatureObj> features;
 
     private List<BSObj> businessRules;
+
+    private Boolean silent;
 
 
     @Data

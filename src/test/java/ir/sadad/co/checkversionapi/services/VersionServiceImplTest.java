@@ -83,8 +83,8 @@ class VersionServiceImplTest {
         ChangeHistoryReqDTO reqDTO = new ChangeHistoryReqDTO();
         reqDTO.setReturnFeature(true);
         reqDTO.setOsVersion(9);
-        reqDTO.setOsCode(1);
-        reqDTO.setAppId(1L);
+        reqDTO.setOsCode("IOS");
+        reqDTO.setAppId("DEMO");
         reqDTO.setClientVersionCode(40101564);
 
         assertEquals(2, versionService.changeHistory(reqDTO).getAppStatus().getStatusCode());
@@ -93,7 +93,7 @@ class VersionServiceImplTest {
     @Test
     void afterUpdate() {
         AfterUpdateReqDTO reqDTO = new AfterUpdateReqDTO();
-        reqDTO.setAppId(1L);
+        reqDTO.setAppId("DEMO");
         reqDTO.setOldVersionCode(40101564);
         reqDTO.setCurrentVersionCode(40101581);
 

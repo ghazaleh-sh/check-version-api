@@ -2,8 +2,6 @@ package ir.sadad.co.checkversionapi.entities;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Cache;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -17,8 +15,8 @@ import java.util.Date;
 @Getter
 @Setter
 @Entity
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-@Table(name = "Version", schema = "VERSION_API")
+//@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@Table(name = "Version", schema = "VERSION_API", uniqueConstraints = {@UniqueConstraint(columnNames = {"VERSION_CODE", "APP_ID"}, name = "UKVERSION_VERSIONCODE_APPID")})
 public class Version implements Serializable {
 
     private static final long serialVersionUID = -7408239447840978240L;
@@ -28,13 +26,13 @@ public class Version implements Serializable {
     private Long id;
 
     @ManyToOne
-    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+//    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     @JoinColumn(name = "APP_ID", referencedColumnName = "ID", nullable = false)
     @NotNull
     private ApplicationInfo applicationInfo;
 
     @ManyToOne
-    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+//    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     @JoinColumn(name = "STATUS_ID", referencedColumnName = "ID", nullable = false)
     @NotNull
     private Status status;
@@ -45,7 +43,7 @@ public class Version implements Serializable {
     @Column(name = "IS_NEW")
     private boolean enabled;
 
-    @Column(name = "VERSION_CODE", unique = true, length = 50)
+    @Column(name = "VERSION_CODE", length = 50)
     @NotNull
     private Integer versionCode;
 
@@ -53,5 +51,7 @@ public class Version implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date validityDate;
 
+    @Column(name = "IS_SILENT", columnDefinition="SMALLINT default 0")
+    private boolean silent;
 
 }

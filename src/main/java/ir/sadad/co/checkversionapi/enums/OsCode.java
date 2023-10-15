@@ -6,7 +6,7 @@ public enum OsCode {
     IOS(2),
     WEB(3);
 
-    private Integer value;
+    private final Integer value;
 
     OsCode(int value) {
         this.value = value;

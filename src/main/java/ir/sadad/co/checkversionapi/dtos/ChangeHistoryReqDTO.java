@@ -5,6 +5,7 @@ import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import java.io.Serializable;
 
 /**
@@ -17,7 +18,8 @@ public class ChangeHistoryReqDTO implements Serializable {
     private static final long serialVersionUID = 3790648927575247299L;
     @Schema(title = "شناسه اپلیکیشن")
     @NotNull(message = "app.id.is.required")
-    private Long appId;
+    @Pattern(regexp = "^(PRODUCTION|PWA|DEVELOP|DEMO)$", message = "{app.id.not.valid}")
+    private String appId;
 
     @Schema(title = "ورژن کد کاربر")
     @NotNull(message = "version.code.is.required")
@@ -25,7 +27,8 @@ public class ChangeHistoryReqDTO implements Serializable {
 
     @Schema(title = "کد سیستم عامل")
     @NotNull(message = "os.code.is.required")
-    private Integer osCode;
+    @Pattern(regexp = "^(ANDROID|IOS|WEB)$", message = "{os.code.not.valid}")
+    private String osCode;
 
     @Schema(title = "ورژن سیستم عامل")
     @NotNull(message = "os.version.is.required")

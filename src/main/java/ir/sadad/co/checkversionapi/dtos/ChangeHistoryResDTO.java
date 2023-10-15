@@ -50,4 +50,7 @@ public class ChangeHistoryResDTO implements Serializable {
     @Schema(title = "لینک دانلود فلیور ارسالی")
     private String downloadLink;
 
+    @Schema(title = "سایلنت بودن نسخه")
+    private Boolean silent;
+
 }

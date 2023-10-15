@@ -183,22 +183,22 @@
         </dependency>
         <!--################## hibernate 2nd level cache provider ##############-->
         <!-- provide JCache+Ehcache3 integration with hibernate -->
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-jcache</artifactId>
-            <version>5.4.32.Final</version>
-        </dependency>
-        <!-- provide second level caching functionality -->
-        <dependency>
-            <groupId>org.ehcache</groupId>
-            <artifactId>ehcache</artifactId>
-            <version>3.10.0</version>
-        </dependency>
-        <!-- jCache provider  -->
-        <dependency>
-            <groupId>javax.cache</groupId>
-            <artifactId>cache-api</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.hibernate</groupId>-->
+<!--            <artifactId>hibernate-jcache</artifactId>-->
+<!--            <version>5.4.32.Final</version>-->
+<!--        </dependency>-->
+<!--        &lt;!&ndash; provide second level caching functionality &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.ehcache</groupId>-->
+<!--            <artifactId>ehcache</artifactId>-->
+<!--            <version>3.10.0</version>-->
+<!--        </dependency>-->
+<!--        &lt;!&ndash; jCache provider  &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>javax.cache</groupId>-->
+<!--            <artifactId>cache-api</artifactId>-->
+<!--        </dependency>-->
 
         <!--############################ (OpenApi) ############################-->
         <dependency>

@@ -2,7 +2,6 @@ package ir.sadad.co.checkversionapi.entities;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -15,7 +14,7 @@ import java.io.Serializable;
 @Getter
 @Setter
 @Entity
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+//@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Table(name = "APPLICATION_INFO", schema = "VERSION_API")
 public class ApplicationInfo implements Serializable {
 

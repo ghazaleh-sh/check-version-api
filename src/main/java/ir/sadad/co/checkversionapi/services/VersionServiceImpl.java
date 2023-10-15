@@ -4,7 +4,9 @@ import ir.sadad.co.checkversionapi.dtos.*;
 import ir.sadad.co.checkversionapi.dtos.mappers.UpdateMapper;
 import ir.sadad.co.checkversionapi.dtos.mappers.VersionMapper;
 import ir.sadad.co.checkversionapi.entities.*;
+import ir.sadad.co.checkversionapi.enums.ApplicationName;
 import ir.sadad.co.checkversionapi.enums.FeatureType;
+import ir.sadad.co.checkversionapi.enums.OsCode;
 import ir.sadad.co.checkversionapi.enums.VersionStatus;
 import ir.sadad.co.checkversionapi.commons.exceptions.MoreThanOneNewVersionException;
 import ir.sadad.co.checkversionapi.commons.exceptions.NotFoundException;
@@ -49,14 +51,14 @@ public class VersionServiceImpl implements VersionService {
     @SneakyThrows
     @Override
     public ChangeHistoryResDTO changeHistory(ChangeHistoryReqDTO changeHistoryReqDTO) {
+        Long appId = (long) ApplicationName.valueOf(changeHistoryReqDTO.getAppId()).getValue();
+        Version savedVersion = checkVersionCodeWithAppId(changeHistoryReqDTO.getClientVersionCode(), appId);
 
-        Version savedVersion = checkVersionCodeWithAppId(changeHistoryReqDTO.getClientVersionCode(), changeHistoryReqDTO.getAppId());
-
-        Status savedStatus = checkVersionCodeStatus(savedVersion, changeHistoryReqDTO.getOsCode(), changeHistoryReqDTO.getOsVersion());
+        Status savedStatus = checkVersionCodeStatus(savedVersion, OsCode.valueOf(changeHistoryReqDTO.getOsCode()).getValue(), changeHistoryReqDTO.getOsVersion());
 
         log.info("version and status fetched correctly...");
         Set<Feature> features = new HashSet<>();
-        List<Version> versionsGtCurrentCode = versionRepository.findByApplicationInfoIdAndVersionCodeGreaterThanOrderByVersionCodeDesc(changeHistoryReqDTO.getAppId(), savedVersion.getVersionCode());
+        List<Version> versionsGtCurrentCode = versionRepository.findByApplicationInfoIdAndVersionCodeGreaterThanOrderByVersionCodeDesc(appId, savedVersion.getVersionCode());
 
         Version lastVersion = versionsGtCurrentCode.isEmpty() ? savedVersion : versionsGtCurrentCode.stream().findFirst().get();
 
@@ -80,7 +82,7 @@ public class VersionServiceImpl implements VersionService {
         List<Feature> featureListWithSub = setEnableSubFeatures(filterGeneralBugFix(features.stream()
                 .filter(Objects::nonNull).collect(Collectors.toList())));
 
-        Optional<String> downloadLink = getDownloadLink(changeHistoryReqDTO.getAppId(), changeHistoryReqDTO.getFlavorName());
+        Optional<String> downloadLink = getDownloadLink(appId, changeHistoryReqDTO.getFlavorName());
 
         ChangeHistoryResDTO changeHistoryResDTO = new ChangeHistoryResDTO();
         changeHistoryResDTO.setLastVersionCode(lastVersion.getVersionCode());
@@ -89,6 +91,7 @@ public class VersionServiceImpl implements VersionService {
         changeHistoryResDTO.setAppStatus(savedStatus);
         changeHistoryResDTO.setCurrentDate(System.currentTimeMillis()); // equivalent Instant.now().toEpochMilli()  -  modern format
         changeHistoryResDTO.setDownloadLink(downloadLink.orElse(null));
+        changeHistoryResDTO.setSilent(savedVersion.isSilent());
         if (savedVersion.getValidityDate() != null)
             changeHistoryResDTO.setValidityDate(savedVersion.getValidityDate().getTime());
 
@@ -125,14 +128,15 @@ public class VersionServiceImpl implements VersionService {
     @SneakyThrows
     @Override
     public AfterUpdateResDTO afterUpdate(AfterUpdateReqDTO afterUpdateReqDTO) {
-        Version savedOldVersion = checkVersionCodeWithAppId(afterUpdateReqDTO.getOldVersionCode(), afterUpdateReqDTO.getAppId());
-        Version savedCurrentVersion = checkVersionCodeWithAppId(afterUpdateReqDTO.getCurrentVersionCode(), afterUpdateReqDTO.getAppId());
+        Long appId = (long) ApplicationName.valueOf(afterUpdateReqDTO.getAppId()).getValue();
+        Version savedOldVersion = checkVersionCodeWithAppId(afterUpdateReqDTO.getOldVersionCode(), appId);
+        Version savedCurrentVersion = checkVersionCodeWithAppId(afterUpdateReqDTO.getCurrentVersionCode(), appId);
 
 //        Status savedCurrentStatus = checkVersionCodeStatus(savedCurrentVersion, null, null);
 
         log.info("both old and current versions have been fetched correctly...");
         Set<Feature> features = new HashSet<>();
-        List<Version> versionsBetweenCodes = versionRepository.findByApplicationInfoIdAndVersionCodeBetween(afterUpdateReqDTO.getAppId(), savedOldVersion.getVersionCode(), savedCurrentVersion.getVersionCode());
+        List<Version> versionsBetweenCodes = versionRepository.findByApplicationInfoIdAndVersionCodeBetween(appId, savedOldVersion.getVersionCode(), savedCurrentVersion.getVersionCode());
         if (!versionsBetweenCodes.isEmpty()) {
             if (!savedCurrentVersion.getVersionCode().equals(savedOldVersion.getVersionCode()))
                 versionsBetweenCodes.stream().filter(version -> version != savedOldVersion).forEach(v -> versionFeatureRepository.findByVersion(v).forEach(a ->
@@ -147,7 +151,7 @@ public class VersionServiceImpl implements VersionService {
         List<Feature> featureListWithSub = setEnableSubFeatures(filterGeneralBugFix(features.stream().filter(Objects::nonNull).collect(Collectors.toList())));
 
         AfterUpdateResDTO afterUpdateResDTO = new AfterUpdateResDTO();
-        afterUpdateResDTO.setLastVersionCode(versionRepository.findTopByApplicationInfoIdOrderByVersionCodeDesc(afterUpdateReqDTO.getAppId()).getVersionCode());
+        afterUpdateResDTO.setLastVersionCode(versionRepository.findTopByApplicationInfoIdOrderByVersionCodeDesc(appId).getVersionCode());
         afterUpdateResDTO.setFeatures(featureListWithSub);
 //        afterUpdateResDTO.setAppStatus(savedCurrentStatus);
         if (afterUpdateResDTO.getLastVersionCode().equals(afterUpdateReqDTO.getCurrentVersionCode()))
@@ -184,6 +188,7 @@ public class VersionServiceImpl implements VersionService {
         newVersion.setValidityDate(addVersionReqDto.getValidityDate());
         newVersion.setApplicationInfo(existedApp);
         newVersion.setStatus(existedStatus);
+        newVersion.setSilent(addVersionReqDto.getSilent());
         versionRepository.saveAndFlush(newVersion);
 
         addVersionReqDto.getFeatures().forEach(f -> createNewFeature(f, newVersion));
@@ -290,6 +295,7 @@ public class VersionServiceImpl implements VersionService {
         versionInfoDto.setLastVersion(savedVersion.isEnabled());
         versionInfoDto.setAppStatus(savedVersion.getStatus());
         versionInfoDto.setApplicationInfo(savedVersion.getApplicationInfo());
+        versionInfoDto.setSilent(savedVersion.isSilent());
         versionInfoDto.setFeatures(versionMapper.toFeatureDto(featureListWithSub));
         versionInfoDto.setBusinessRules(versionMapper.toBusinessRuleDto(businessRule));
 

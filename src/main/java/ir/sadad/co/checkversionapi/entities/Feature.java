@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import ir.sadad.co.checkversionapi.enums.FeatureType;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Cache;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -21,7 +19,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @Entity
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Table(name = "FEATURE", schema = "VERSION_API")
 //@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class Feature implements Serializable {

@@ -3,18 +3,16 @@ package ir.sadad.co.checkversionapi.entities;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import org.hibernate.annotations.Cache;
 
 @Getter
 @Setter
 @Entity
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+//@Cacheable
+//@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Table(name = "FLAVOR", schema = "VERSION_API")
 public class Flavor implements Serializable {
 
@@ -32,7 +30,7 @@ public class Flavor implements Serializable {
     private String downloadLink;
 
     @ManyToOne
-    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+//    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     @JoinColumn(name = "APP_ID", referencedColumnName = "ID", nullable = false)
     @NotNull
     private ApplicationInfo applicationInfo;

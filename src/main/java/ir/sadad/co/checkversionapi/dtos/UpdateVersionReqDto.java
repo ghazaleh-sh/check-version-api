@@ -22,6 +22,7 @@ public class UpdateVersionReqDto implements Serializable {
     private Date validityDate;
     private List<FeatureUpdateObj> features;
     private List<BSUpdateObj> businessRules;
+    private Boolean silent;
 
     @Data
     @Getter

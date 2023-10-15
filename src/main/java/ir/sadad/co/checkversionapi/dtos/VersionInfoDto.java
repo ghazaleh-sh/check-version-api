@@ -18,6 +18,7 @@ public class VersionInfoDto {
     private boolean lastVersion;
     private Status appStatus;
     private ApplicationInfo applicationInfo;
+    private Boolean silent;
     private List<FeatureObj> features;
     private List<BSObj> businessRules;
 
